@@ -1,47 +1,42 @@
-import sys
-import os
-
-# 🔥 FORCE ROOT PATH (STREAMLIT CLOUD FIX)
-ROOT = os.path.abspath(os.path.dirname(__file__))
-if ROOT not in sys.path:
-    sys.path.append(ROOT)
-
-# 🔥 ALSO ADD PARENT (IMPORTANT)
-PARENT = os.path.dirname(ROOT)
-if PARENT not in sys.path:
-    sys.path.append(PARENT)
-    
 # =========================
 # IMPORTS
 # =========================
 import streamlit as st
 import time
 
-# DB INIT
+# =========================
+# DATABASE INIT
+# =========================
 from db.database import init_db
 init_db()
 
+# =========================
 # AUTH SERVICES
-from auth.auth_service import login_user
+# =========================
+from auth.auth_service import (
+    login_user,
+    register_user,
+    generate_login_otp,
+    verify_otp
+)
 
-try:
-    import sys
-    import os
+# =========================
+# API + EMAIL SERVICES
+# =========================
+from services.crypto_api import get_top_10_prices
+from services.email_service import (
+    send_welcome_email,
+    send_otp_email
+)
 
-# FORCE ROOT PATH
-    sys.path.append(os.getcwd())
-
-# NOW IMPORT
-    from services.crypto_api import get_top_10_prices
-except ModuleNotFoundError:
-    import sys, os
-    sys.path.append(os.getcwd())
-    from services.crypto_api import get_top_10_prices
-    
+# =========================
 # UI COMPONENTS
+# =========================
 from ui.components import render_header, render_ticker
 
+# =========================
 # CONFIG
+# =========================
 from config import AUTO_REFRESH_INTERVAL
 
 
@@ -51,7 +46,7 @@ from config import AUTO_REFRESH_INTERVAL
 st.set_page_config(page_title="🚀 Crypto SaaS Platform", layout="wide")
 
 # =========================
-# HIDE STREAMLIT DEFAULT UI
+# HIDE DEFAULT STREAMLIT UI
 # =========================
 st.markdown("""
 <style>
@@ -178,7 +173,6 @@ def login_ui():
 
         if st.button("Send OTP"):
             otp = generate_login_otp()
-
             st.session_state.otp = otp
             st.session_state.temp_email = email
 
