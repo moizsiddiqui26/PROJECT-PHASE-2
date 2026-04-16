@@ -1,3 +1,8 @@
+import sys
+import os
+
+# Ensure project root is in path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import streamlit as st
 import time
 
