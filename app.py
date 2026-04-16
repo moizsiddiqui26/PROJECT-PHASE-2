@@ -18,11 +18,11 @@ import streamlit as st
 import time
 
 # DB INIT
-from db.database import init_db
+from .db.database import init_db
 init_db()
 
 # AUTH SERVICES
-from auth.auth_service import login_user
+from .auth.auth_service import login_user
 
 try:
     import sys
