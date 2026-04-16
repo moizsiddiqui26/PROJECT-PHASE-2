@@ -29,14 +29,13 @@ from auth.auth_service import (
     verify_otp
 )
 
-# API + EMAIL
 try:
     from services.crypto_api import get_top_10_prices
-except:
+except ModuleNotFoundError:
     import sys, os
     sys.path.append(os.getcwd())
-    from services.crypto_api import get_top_10_pricesfrom services.email_service import send_welcome_email, send_otp_email
-
+    from services.crypto_api import get_top_10_prices
+    
 # UI COMPONENTS
 from ui.components import render_header, render_ticker
 
