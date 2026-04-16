@@ -26,8 +26,12 @@ from auth.auth_service import (
 )
 
 # API + EMAIL
-from services.crypto_api import get_top_10_prices
-from services.email_service import send_welcome_email, send_otp_email
+try:
+    from services.crypto_api import get_top_10_prices
+except:
+    import sys, os
+    sys.path.append(os.getcwd())
+    from services.crypto_api import get_top_10_pricesfrom services.email_service import send_welcome_email, send_otp_email
 
 # UI COMPONENTS
 from ui.components import render_header, render_ticker
