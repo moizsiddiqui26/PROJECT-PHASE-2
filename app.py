@@ -1,12 +1,16 @@
-# =========================
-# FIX IMPORT PATH (CRITICAL)
-# =========================
 import sys
 import os
 
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, ROOT_DIR)
+# 🔥 FORCE ROOT PATH (STREAMLIT CLOUD FIX)
+ROOT = os.path.abspath(os.path.dirname(__file__))
+if ROOT not in sys.path:
+    sys.path.append(ROOT)
 
+# 🔥 ALSO ADD PARENT (IMPORTANT)
+PARENT = os.path.dirname(ROOT)
+if PARENT not in sys.path:
+    sys.path.append(PARENT)
+    
 # =========================
 # IMPORTS
 # =========================
