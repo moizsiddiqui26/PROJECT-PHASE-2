@@ -1,41 +1,50 @@
 # =========================
-# FIX PYTHON PATH (CRITICAL)
+# SAFE MODULE LOADER (NO IMPORT ISSUES)
 # =========================
-import sys
 import os
+import importlib.util
 
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def load_module(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+# Load modules
+crypto_api = load_module("crypto_api", os.path.join(BASE_DIR, "services", "crypto_api.py"))
+email_service = load_module("email_service", os.path.join(BASE_DIR, "services", "email_service.py"))
+auth_service = load_module("auth_service", os.path.join(BASE_DIR, "auth", "auth_service.py"))
+db_module = load_module("database", os.path.join(BASE_DIR, "db", "database.py"))
+ui_components = load_module("components", os.path.join(BASE_DIR, "ui", "components.py"))
+config_module = load_module("config", os.path.join(BASE_DIR, "config.py"))
+
+# Extract functions
+get_top_10_prices = crypto_api.get_top_10_prices
+send_welcome_email = email_service.send_welcome_email
+send_otp_email = email_service.send_otp_email
+
+login_user = auth_service.login_user
+register_user = auth_service.register_user
+generate_login_otp = auth_service.generate_login_otp
+verify_otp = auth_service.verify_otp
+
+init_db = db_module.init_db
+
+render_header = ui_components.render_header
+render_ticker = ui_components.render_ticker
+
+AUTO_REFRESH_INTERVAL = config_module.AUTO_REFRESH_INTERVAL
 
 # =========================
-# IMPORTS
+# NORMAL IMPORTS
 # =========================
 import streamlit as st
 import time
 
-# DB
-from db.database import init_db
-
-# AUTH
-from auth.auth_service import (
-    login_user,
-    register_user,
-    generate_login_otp,
-    verify_otp
-)
-
-# SERVICES
-from services.crypto_api import get_top_10_prices
-from services.email_service import send_welcome_email, send_otp_email
-
-# UI
-from ui.components import render_header, render_ticker
-
-# CONFIG
-from config import AUTO_REFRESH_INTERVAL
-
-
 # =========================
-# INIT DB
+# INIT DATABASE
 # =========================
 init_db()
 
@@ -45,7 +54,7 @@ init_db()
 st.set_page_config(page_title="🚀 Crypto SaaS Platform", layout="wide")
 
 # =========================
-# HIDE STREAMLIT DEFAULT UI
+# HIDE DEFAULT STREAMLIT UI
 # =========================
 st.markdown("""
 <style>
@@ -106,10 +115,8 @@ def render_top():
 # AUTH UI
 # =========================
 def login_ui():
-
     render_top()
 
-    # LOGIN
     if st.session_state.mode == "login":
 
         st.subheader("🔐 Login")
@@ -122,7 +129,6 @@ def login_ui():
         with col1:
             if st.button("Login"):
                 res = login_user(email, password)
-
                 if res["success"]:
                     st.session_state.auth = True
                     st.session_state.email = res["user"]["email"]
@@ -139,7 +145,6 @@ def login_ui():
             if st.button("OTP Login"):
                 st.session_state.mode = "otp"
 
-    # REGISTER
     elif st.session_state.mode == "register":
 
         st.subheader("📝 Register")
@@ -150,7 +155,6 @@ def login_ui():
 
         if st.button("Create Account"):
             res = register_user(name, email, password)
-
             if res["success"]:
                 send_welcome_email(email)
                 st.success(res["msg"])
@@ -161,7 +165,6 @@ def login_ui():
         if st.button("Back"):
             st.session_state.mode = "login"
 
-    # OTP LOGIN
     elif st.session_state.mode == "otp":
 
         st.subheader("🔐 OTP Login")
@@ -172,7 +175,6 @@ def login_ui():
             otp = generate_login_otp()
             st.session_state.otp = otp
             st.session_state.temp_email = email
-
             send_otp_email(email, otp)
             st.success("OTP sent")
 
@@ -194,7 +196,6 @@ def login_ui():
 # MAIN APP
 # =========================
 def main_app():
-
     render_top()
 
     col1, col2 = st.columns([9, 1])
@@ -204,8 +205,9 @@ def main_app():
             st.session_state.auth = False
             st.rerun()
 
-    from ui.dashboard import main
-    main()
+    # load dashboard safely
+    dashboard = load_module("dashboard", os.path.join(BASE_DIR, "ui", "dashboard.py"))
+    dashboard.main()
 
 # =========================
 # ROUTING
