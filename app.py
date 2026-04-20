@@ -1,18 +1,21 @@
 # =========================
+# FIX PYTHON PATH (CRITICAL)
+# =========================
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
+# =========================
 # IMPORTS
 # =========================
 import streamlit as st
 import time
 
-# =========================
-# DATABASE INIT
-# =========================
+# DB
 from db.database import init_db
-init_db()
 
-# =========================
-# AUTH SERVICES
-# =========================
+# AUTH
 from auth.auth_service import (
     login_user,
     register_user,
@@ -20,25 +23,21 @@ from auth.auth_service import (
     verify_otp
 )
 
-# =========================
-# API + EMAIL SERVICES
-# =========================
+# SERVICES
 from services.crypto_api import get_top_10_prices
-from services.email_service import (
-    send_welcome_email,
-    send_otp_email
-)
+from services.email_service import send_welcome_email, send_otp_email
 
-# =========================
-# UI COMPONENTS
-# =========================
+# UI
 from ui.components import render_header, render_ticker
 
-# =========================
 # CONFIG
-# =========================
 from config import AUTO_REFRESH_INTERVAL
 
+
+# =========================
+# INIT DB
+# =========================
+init_db()
 
 # =========================
 # PAGE CONFIG
@@ -46,7 +45,7 @@ from config import AUTO_REFRESH_INTERVAL
 st.set_page_config(page_title="🚀 Crypto SaaS Platform", layout="wide")
 
 # =========================
-# HIDE DEFAULT STREAMLIT UI
+# HIDE STREAMLIT DEFAULT UI
 # =========================
 st.markdown("""
 <style>
@@ -93,7 +92,6 @@ if time.time() - st.session_state.last_refresh > AUTO_REFRESH_INTERVAL:
     st.session_state.last_refresh = time.time()
     st.rerun()
 
-
 # =========================
 # HEADER + TICKER
 # =========================
@@ -104,7 +102,6 @@ def render_top():
     prices = get_top_10_prices()
     render_ticker(prices)
 
-
 # =========================
 # AUTH UI
 # =========================
@@ -112,7 +109,7 @@ def login_ui():
 
     render_top()
 
-    # ---------- LOGIN ----------
+    # LOGIN
     if st.session_state.mode == "login":
 
         st.subheader("🔐 Login")
@@ -142,7 +139,7 @@ def login_ui():
             if st.button("OTP Login"):
                 st.session_state.mode = "otp"
 
-    # ---------- REGISTER ----------
+    # REGISTER
     elif st.session_state.mode == "register":
 
         st.subheader("📝 Register")
@@ -164,7 +161,7 @@ def login_ui():
         if st.button("Back"):
             st.session_state.mode = "login"
 
-    # ---------- OTP LOGIN ----------
+    # OTP LOGIN
     elif st.session_state.mode == "otp":
 
         st.subheader("🔐 OTP Login")
@@ -193,7 +190,6 @@ def login_ui():
         if st.button("Back"):
             st.session_state.mode = "login"
 
-
 # =========================
 # MAIN APP
 # =========================
@@ -201,7 +197,6 @@ def main_app():
 
     render_top()
 
-    # Logout button
     col1, col2 = st.columns([9, 1])
 
     with col2:
@@ -209,10 +204,8 @@ def main_app():
             st.session_state.auth = False
             st.rerun()
 
-    # Load dashboard
     from ui.dashboard import main
     main()
-
 
 # =========================
 # ROUTING
