@@ -14,19 +14,17 @@ SYMBOL_MAP = {
 
 def get_live_prices():
     try:
-        url = "https://api.binance.com/api/v3/ticker/price"
-        res = requests.get(url, timeout=5)
-        data = res.json()
-
         prices = {}
 
-        for item in data:
-            symbol = item["symbol"]
-            price = float(item["price"])
+        # ✅ Fetch only required coins (FAST)
+        for name, symbol in SYMBOL_MAP.items():
 
-            for k, v in SYMBOL_MAP.items():
-                if v == symbol:
-                    prices[k] = price
+            url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
+            res = requests.get(url, timeout=2)
+
+            if res.status_code == 200:
+                data = res.json()
+                prices[name] = float(data["price"])
 
         return prices
 
