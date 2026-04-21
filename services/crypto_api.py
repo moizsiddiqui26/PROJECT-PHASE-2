@@ -1,7 +1,11 @@
 import requests
 import pandas as pd
 import time
+from functools import lru_cache
 
+# =========================
+# CONFIG
+# =========================
 TOP_10_COINS = {
     "BTC": "bitcoin",
     "ETH": "ethereum",
@@ -19,60 +23,78 @@ BASE_URL = "https://api.coingecko.com/api/v3"
 
 
 # =========================
-# LIVE PRICES
+# SAFE REQUEST HELPER
 # =========================
-def get_top_10_prices():
+def safe_request(url, params=None):
     try:
-        ids = ",".join(TOP_10_COINS.values())
+        res = requests.get(url, params=params, timeout=10)
 
-        res = requests.get(
-            f"{BASE_URL}/simple/price",
-            params={"ids": ids, "vs_currencies": "usd"},
-            timeout=10
-        )
+        # ❌ Handle rate limit / bad response
+        if res.status_code != 200:
+            return None
 
-        return res.json()
+        data = res.json()
+
+        # ❌ Reject invalid API responses
+        if not isinstance(data, dict):
+            return None
+
+        if "status" in data:
+            return None
+
+        return data
 
     except:
+        return None
+
+
+# =========================
+# LIVE PRICES (CACHED)
+# =========================
+@lru_cache(maxsize=2)
+def get_top_10_prices():
+
+    ids = ",".join(TOP_10_COINS.values())
+
+    data = safe_request(
+        f"{BASE_URL}/simple/price",
+        params={"ids": ids, "vs_currencies": "usd"}
+    )
+
+    if not data:
         return {}
 
+    return data
+
 
 # =========================
-# HISTORICAL DATA (CRITICAL FIX)
+# HISTORICAL DATA (SAFE)
 # =========================
+@lru_cache(maxsize=2)
 def get_historical_data(days=90):
 
     all_data = []
 
     for symbol, coin_id in TOP_10_COINS.items():
 
-        try:
-            res = requests.get(
-                f"{BASE_URL}/coins/{coin_id}/market_chart",
-                params={"vs_currency": "usd", "days": days},
-                timeout=10
-            )
+        data = safe_request(
+            f"{BASE_URL}/coins/{coin_id}/market_chart",
+            params={"vs_currency": "usd", "days": days}
+        )
 
-            if res.status_code != 200:
-                continue
+        if not data or "prices" not in data:
+            continue
 
-            data = res.json()
+        df = pd.DataFrame(data["prices"], columns=["timestamp", "Close"])
 
-            if "prices" not in data:
-                continue
+        df["Date"] = pd.to_datetime(df["timestamp"], unit="ms")
+        df["Crypto"] = symbol
 
-            df = pd.DataFrame(data["prices"], columns=["timestamp", "Close"])
-            df["Date"] = pd.to_datetime(df["timestamp"], unit="ms")
-            df["Crypto"] = symbol
+        all_data.append(df[["Date", "Crypto", "Close"]])
 
-            all_data.append(df[["Date", "Crypto", "Close"]])
+        # ✅ Small delay (safe, not heavy)
+        time.sleep(0.2)
 
-            time.sleep(1)  # avoid rate limit
-
-        except Exception as e:
-            print("Error:", e)
-
-    # 🔥 THIS IS THE FIX (NOT INSIDE LOOP)
     if not all_data:
         return pd.DataFrame()
 
