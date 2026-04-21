@@ -1,3 +1,4 @@
+```python
 # =========================
 # SAFE MODULE LOADER
 # =========================
@@ -11,6 +12,7 @@ def load_module(name, path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
 
 # =========================
 # LOAD MODULES
@@ -36,10 +38,12 @@ init_db = db_module.init_db
 render_header = ui_components.render_header
 render_ticker = ui_components.render_ticker
 
+
 # =========================
 # IMPORTS
 # =========================
 import streamlit as st
+
 
 # =========================
 # INIT
@@ -47,6 +51,7 @@ import streamlit as st
 init_db()
 
 st.set_page_config(page_title="🚀 Crypto SaaS Platform", layout="wide")
+
 
 # =========================
 # HIDE DEFAULT UI
@@ -59,6 +64,7 @@ header {visibility:hidden;}
 </style>
 """, unsafe_allow_html=True)
 
+
 # =========================
 # GLOBAL STYLE
 # =========================
@@ -70,6 +76,7 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 # =========================
 # SESSION STATE
@@ -88,9 +95,15 @@ if "temp_email" not in st.session_state:
 
 
 # =========================
-# HEADER + TICKER
+# HEADERS
 # =========================
-def render_top():
+def render_public_header():
+    st.markdown("## 🚀 Welcome to Crypto SaaS")
+    prices = get_top_10_prices()
+    render_ticker(prices)
+
+
+def render_private_header():
     user = st.session_state.get("email", "Guest")
     render_header(user)
 
@@ -103,8 +116,9 @@ def render_top():
 # =========================
 def login_ui():
 
-    render_top()
+    render_public_header()
 
+    # ================= LOGIN =================
     if st.session_state.mode == "login":
 
         st.subheader("🔐 Login")
@@ -134,6 +148,7 @@ def login_ui():
             if st.button("OTP Login"):
                 st.session_state.mode = "otp"
 
+    # ================= REGISTER =================
     elif st.session_state.mode == "register":
 
         st.subheader("📝 Register")
@@ -147,14 +162,20 @@ def login_ui():
 
             if res["success"]:
                 send_welcome_email(email)
-                st.success(res["msg"])
-                st.session_state.mode = "login"
+
+                # ✅ AUTO LOGIN AFTER REGISTER
+                st.session_state.auth = True
+                st.session_state.email = email
+
+                st.success("Account created & logged in successfully 🚀")
+                st.rerun()
             else:
                 st.error(res["msg"])
 
         if st.button("Back"):
             st.session_state.mode = "login"
 
+    # ================= OTP LOGIN =================
     elif st.session_state.mode == "otp":
 
         st.subheader("🔐 OTP Login")
@@ -189,9 +210,8 @@ def login_ui():
 # =========================
 def main_app():
 
-    render_top()
+    render_private_header()
 
-    # ✅ Load dashboard (navigation handled inside header)
     dashboard = load_module("dashboard", os.path.join(BASE_DIR, "ui", "dashboard.py"))
     dashboard.main()
 
@@ -203,3 +223,4 @@ if not st.session_state.auth:
     login_ui()
 else:
     main_app()
+```
