@@ -102,8 +102,7 @@ def render_header(user):
             st.session_state.auth = False
             st.rerun()
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
 # =========================
 # LIVE TICKER (IMPROVED)
