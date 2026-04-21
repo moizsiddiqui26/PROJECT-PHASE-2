@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import os, importlib.util
 import time
@@ -35,49 +36,65 @@ get_live_prices = live.get_live_prices
 # =========================
 st.set_page_config(page_title="🚀 Crypto SaaS", layout="wide")
 
+# =========================
+# PREMIUM GLOBAL UI
+# =========================
 st.markdown("""
 <style>
 
-/* App Background */
+/* Background */
 .stApp {
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: white;
 }
 
-/* Cards */
-.card {
-    background: rgba(255,255,255,0.05);
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
+/* Remove default padding */
+.block-container {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+/* Buttons */
+.stButton>button {
+    background: linear-gradient(90deg, #00f5ff, #00ffcc);
+    color: black;
+    font-weight: bold;
+    border-radius: 10px;
+}
+
+/* Inputs */
+input {
+    border-radius: 10px !important;
 }
 
 /* Section Titles */
 .section-title {
     font-size: 26px;
-    font-weight: bold;
+    font-weight: 600;
     margin-bottom: 10px;
 }
 
-/* Glow text */
-.glow {
-    color: #00f5ff;
+/* Glass Card */
+.glass-card {
+    background: rgba(255,255,255,0.06);
+    padding: 20px;
+    border-radius: 18px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0px 6px 25px rgba(0,0,0,0.4);
 }
 
-/* Inputs */
-input, .stNumberInput, .stSelectbox {
-    border-radius: 10px !important;
-}
-
-/* Buttons */
-.stButton>button {
-    border-radius: 10px;
-    background: #00f5ff;
-    color: black;
-    font-weight: bold;
+/* KPI */
+.kpi {
+    background: linear-gradient(135deg, #1f1c2c, #302b63);
+    padding: 18px;
+    border-radius: 14px;
+    text-align: center;
 }
 
 </style>
 """, unsafe_allow_html=True)
+
+
 # =========================
 # SESSION STATE
 # =========================
@@ -108,9 +125,9 @@ def get_cached_prices():
 def login_ui():
 
     st.markdown("""
-    <div style="text-align:center; padding:40px;">
+    <div style="text-align:center; padding:50px;">
         <h1 style="color:#00f5ff;">🚀 Crypto SaaS</h1>
-        <p style="color:gray;">Real-time Crypto Dashboard</p>
+        <p style="color:gray;">Smart Crypto Dashboard</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -140,7 +157,9 @@ def main_app():
 
     render_header(st.session_state.email)
 
-    # ✅ Update prices every 2 seconds
+    # =========================
+    # LIVE PRICES UPDATE
+    # =========================
     now = time.time()
 
     if now - st.session_state.last_update > 2:
@@ -160,7 +179,7 @@ def main_app():
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
     # =========================
-    # DASHBOARD
+    # DASHBOARD LOAD
     # =========================
     dashboard = load_module("dashboard", os.path.join(BASE_DIR, "ui", "dashboard.py"))
     dashboard.main()
@@ -179,3 +198,4 @@ if not st.session_state.auth:
     login_ui()
 else:
     main_app()
+```
