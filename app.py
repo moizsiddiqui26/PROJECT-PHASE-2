@@ -12,6 +12,7 @@ def load_module(name, path):
     spec.loader.exec_module(module)
     return module
 
+
 # =========================
 # LOAD MODULES
 # =========================
@@ -21,8 +22,9 @@ auth_service = load_module("auth_service", os.path.join(BASE_DIR, "auth", "auth_
 db_module = load_module("database", os.path.join(BASE_DIR, "db", "database.py"))
 ui_components = load_module("components", os.path.join(BASE_DIR, "ui", "components.py"))
 
-# Extract
+# Extract functions
 get_top_10_prices = crypto_api.get_top_10_prices
+
 send_welcome_email = email_service.send_welcome_email
 send_otp_email = email_service.send_otp_email
 
@@ -33,13 +35,16 @@ verify_otp = auth_service.verify_otp
 
 init_db = db_module.init_db
 
-render_header = ui_components.render_header
+render_public_header = ui_components.render_public_header
+render_app_header = ui_components.render_app_header
 render_ticker = ui_components.render_ticker
+
 
 # =========================
 # IMPORTS
 # =========================
 import streamlit as st
+
 
 # =========================
 # INIT
@@ -48,9 +53,7 @@ init_db()
 
 st.set_page_config(page_title="🚀 Crypto SaaS Platform", layout="wide")
 
-# =========================
-# HIDE DEFAULT UI
-# =========================
+# Hide default Streamlit UI
 st.markdown("""
 <style>
 #MainMenu {visibility:hidden;}
@@ -59,9 +62,7 @@ header {visibility:hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# =========================
-# GLOBAL STYLE
-# =========================
+# Global styling
 st.markdown("""
 <style>
 .stApp {
@@ -70,6 +71,7 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 # =========================
 # SESSION STATE
@@ -91,10 +93,13 @@ if "temp_email" not in st.session_state:
 # HEADER + TICKER
 # =========================
 def render_top():
-    user = st.session_state.get("email", "Guest")
-    render_header(user)
-
     prices = get_top_10_prices()
+
+    if st.session_state.auth:
+        render_app_header(st.session_state.get("email"))
+    else:
+        render_public_header()
+
     render_ticker(prices)
 
 
@@ -191,7 +196,7 @@ def main_app():
 
     render_top()
 
-    # ✅ Load dashboard (navigation handled inside header)
+    # Load dashboard
     dashboard = load_module("dashboard", os.path.join(BASE_DIR, "ui", "dashboard.py"))
     dashboard.main()
 
