@@ -20,8 +20,7 @@ from ui.components import top_nav
 # =========================
 @st.cache_data(ttl=300)
 def load_data():
-    df = get_historical_data()
-    return df
+    return get_historical_data()
 
 
 # =========================
@@ -38,12 +37,8 @@ def main():
             st.cache_data.clear()
             st.rerun()
 
-    # Load Data
     with st.spinner("🚀 Loading crypto data..."):
         df = load_data()
-
-    # DEBUG (remove later if needed)
-    st.write("Coins Loaded:", df["Crypto"].unique())
 
     if df.empty:
         st.error("⚠ Failed to load data")
@@ -64,39 +59,9 @@ def main():
 
         f = df[df["Crypto"].isin(coins)].copy()
 
-        # PRICE
         st.plotly_chart(
             px.line(f, x="Date", y="Close", color="Crypto",
                     title="📈 Price Trends"),
-            use_container_width=True
-        )
-
-        # RETURNS
-        f["Return"] = f.groupby("Crypto")["Close"].pct_change()
-
-        st.plotly_chart(
-            px.line(f, x="Date", y="Return", color="Crypto",
-                    title="📊 Returns"),
-            use_container_width=True
-        )
-
-        # VOLATILITY
-        f["Volatility"] = f.groupby("Crypto")["Return"].transform(
-            lambda x: x.rolling(7).std()
-        )
-
-        st.plotly_chart(
-            px.line(f, x="Date", y="Volatility", color="Crypto",
-                    title="⚠ Volatility"),
-            use_container_width=True
-        )
-
-        # CORRELATION
-        pivot = f.pivot(index="Date", columns="Crypto", values="Close")
-        corr = pivot.pct_change().corr()
-
-        st.plotly_chart(
-            px.imshow(corr, text_auto=True, title="🔗 Correlation Matrix"),
             use_container_width=True
         )
 
@@ -107,7 +72,7 @@ def main():
 
         st.markdown("## 💰 Smart Investment Allocation")
 
-        amount = st.number_input("Investment Amount ($)", value=1000.0)
+        amount = st.number_input("Investment ($)", value=1000.0)
         risk = st.selectbox("Risk Level", ["Low", "Medium", "High"])
 
         returns = df.groupby("Crypto").apply(
@@ -132,7 +97,7 @@ def main():
 
         st.plotly_chart(
             px.pie(m, names="Crypto", values="Investment",
-                   title="📊 Portfolio Allocation"),
+                   title="📊 Allocation"),
             use_container_width=True
         )
 
@@ -157,11 +122,11 @@ def main():
     # =========================
     elif page == "🔮 Forecast":
 
-        st.markdown("## 🔮 Price Forecast")
+        st.markdown("## 🔮 Forecast")
 
         coin = st.selectbox("Select Coin", df["Crypto"].unique())
         amount = st.number_input("Investment ($)", value=1000.0)
-        days = st.slider("Forecast Days", 1, 30, 7)
+        days = st.slider("Days", 1, 30, 7)
 
         coin_df = df[df["Crypto"] == coin]
 
@@ -171,14 +136,9 @@ def main():
 
             col1, col2, col3 = st.columns(3)
 
-            col1.metric("Predicted Price",
-                        f"${result['predicted_price']:.2f}")
-
-            col2.metric("Expected Value",
-                        f"${result['expected_value']:.2f}")
-
-            col3.metric("Profit %",
-                        f"{result['profit_pct']:.2f}%")
+            col1.metric("Predicted Price", f"${result['predicted_price']:.2f}")
+            col2.metric("Expected Value", f"${result['expected_value']:.2f}")
+            col3.metric("Profit %", f"{result['profit_pct']:.2f}%")
 
             fig = go.Figure()
 
@@ -201,79 +161,79 @@ def main():
     # =========================
     elif page == "👤 Portfolio":
 
-    st.markdown("## 👤 Portfolio Manager")
+        st.markdown("## 👤 Portfolio Manager")
 
-    email = st.session_state.get("email")
+        email = st.session_state.get("email")
 
-    coin = st.selectbox("Crypto", df["Crypto"].unique())
-    amount = st.number_input("Investment Amount ($)", min_value=0.0)
-    date = st.date_input("Purchase Date")
+        coin = st.selectbox("Crypto", df["Crypto"].unique())
+        amount = st.number_input("Investment Amount ($)", min_value=0.0)
+        date = st.date_input("Purchase Date")
 
-    if st.button("Add Investment"):
-        add_holding(email, coin, amount, str(date))
-        st.success("✅ Investment added")
+        if st.button("Add Investment"):
+            add_holding(email, coin, amount, str(date))
+            st.success("✅ Added successfully")
 
-    data = get_holdings(email)
+        data = get_holdings(email)
 
-    if data:
+        if data:
 
-        portfolio_df = pd.DataFrame(data, columns=["Crypto", "Amount", "Date"])
+            portfolio_df = pd.DataFrame(data, columns=["Crypto", "Amount", "Date"])
+            portfolio_df["Date"] = pd.to_datetime(portfolio_df["Date"])
 
-        # Convert date
-        portfolio_df["Date"] = pd.to_datetime(portfolio_df["Date"])
+            results = []
 
-        results = []
+            # 🔥 PERFORMANCE DATA
+            performance = {}
 
-        for _, row in portfolio_df.iterrows():
+            for _, row in portfolio_df.iterrows():
 
-            coin_df = df[df["Crypto"] == row["Crypto"]]
+                coin_df = df[df["Crypto"] == row["Crypto"]]
 
-            # 🔥 BUY PRICE (closest date)
-            buy_row = coin_df.iloc[(coin_df["Date"] - row["Date"]).abs().argsort()[:1]]
-            buy_price = buy_row["Close"].values[0]
+                # BUY PRICE
+                buy_row = coin_df.iloc[(coin_df["Date"] - row["Date"]).abs().argsort()[:1]]
+                buy_price = buy_row["Close"].values[0]
 
-            # 🔥 CURRENT PRICE
-            current_price = coin_df["Close"].iloc[-1]
+                current_price = coin_df["Close"].iloc[-1]
 
-            # 🔥 CALCULATIONS
-            units = row["Amount"] / buy_price
-            current_value = units * current_price
-            profit = current_value - row["Amount"]
-            profit_pct = (profit / row["Amount"]) * 100
+                units = row["Amount"] / buy_price
+                current_value = units * current_price
+                profit = current_value - row["Amount"]
+                profit_pct = (profit / row["Amount"]) * 100
 
-            results.append({
-                "Crypto": row["Crypto"],
-                "Invested ($)": round(row["Amount"], 2),
-                "Buy Price": round(buy_price, 2),
-                "Current Price": round(current_price, 2),
-                "Current Value ($)": round(current_value, 2),
-                "Profit/Loss ($)": round(profit, 2),
-                "Profit/Loss %": round(profit_pct, 2),
-                "Date": row["Date"].date()
-            })
+                results.append({
+                    "Crypto": row["Crypto"],
+                    "Invested": row["Amount"],
+                    "Buy Price": buy_price,
+                    "Current Price": current_price,
+                    "Current Value": current_value,
+                    "Profit": profit,
+                    "Profit %": profit_pct
+                })
 
-        final_df = pd.DataFrame(results)
+                # 📈 PERFORMANCE BUILD
+                coin_df = coin_df.copy()
+                coin_df["Value"] = (coin_df["Close"] / buy_price) * row["Amount"]
 
-        # 🔥 STYLE COLORS
-        def color_profit(val):
-            return "color: green" if val > 0 else "color: red"
+                for i, r in coin_df.iterrows():
+                    performance[r["Date"]] = performance.get(r["Date"], 0) + r["Value"]
 
-        st.dataframe(
-            final_df.style.applymap(color_profit, subset=["Profit/Loss ($)", "Profit/Loss %"]),
-            use_container_width=True
-        )
+            final_df = pd.DataFrame(results)
 
-        # TOTAL SUMMARY
-        total_invested = final_df["Invested ($)"].sum()
-        total_current = final_df["Current Value ($)"].sum()
-        total_profit = total_current - total_invested
+            st.dataframe(final_df, use_container_width=True)
 
-        col1, col2, col3 = st.columns(3)
+            # =========================
+            # 📈 PERFORMANCE CHART
+            # =========================
+            perf_df = pd.DataFrame(list(performance.items()), columns=["Date", "Value"])
+            perf_df = perf_df.sort_values("Date")
 
-        col1.metric("Total Invested", f"${total_invested:.2f}")
-        col2.metric("Current Value", f"${total_current:.2f}")
-        col3.metric("Total Profit/Loss", f"${total_profit:.2f}")
+            st.markdown("### 📈 Portfolio Performance")
 
-    else:
-        st.info("No investments yet")
-    
+            st.plotly_chart(
+                px.line(perf_df, x="Date", y="Value",
+                        title="Portfolio Growth Over Time"),
+                use_container_width=True
+            )
+
+        else:
+            st.info("No investments yet")
