@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import os, importlib.util
 
@@ -67,4 +66,3 @@ if not st.session_state.auth:
     login_ui()
 else:
     main_app()
-```
