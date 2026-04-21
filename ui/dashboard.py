@@ -12,7 +12,6 @@ from services.forecast_engine import get_forecast_summary
 from db.models import add_holding, get_holdings
 
 
-
 # =========================
 # LOAD DATA
 # =========================
@@ -26,9 +25,11 @@ def load_data():
 # =========================
 def main():
 
+    # ✅ FIX: Get page from header navigation
+    page = st.session_state.get("page", "📊 Dashboard")
 
-    # Refresh button
-    col1, col2 = st.columns([8,1])
+    # 🔄 Refresh button
+    col1, col2 = st.columns([8, 1])
     with col2:
         if st.button("🔄 Refresh"):
             st.cache_data.clear()
@@ -41,7 +42,6 @@ def main():
         st.error("⚠ Failed to load data")
         return
 
-
     # =========================
     # 📊 DASHBOARD
     # =========================
@@ -51,11 +51,15 @@ def main():
 
         coins = st.multiselect(
             "Select Coins",
-            df["Crypto"].unique(),
-            default=df["Crypto"].unique()
+            sorted(df["Crypto"].unique()),
+            default=sorted(df["Crypto"].unique())
         )
 
         f = df[df["Crypto"].isin(coins)].copy()
+
+        if f.empty:
+            st.warning("Select at least one coin")
+            return
 
         # PRICE
         st.plotly_chart(
@@ -144,6 +148,7 @@ def main():
         col1, col2 = st.columns(2)
         col1.metric("Risk Level", portfolio["level"])
         col2.metric("Risk Score", portfolio["score"])
+
     # =========================
     # 🔮 FORECAST
     # =========================
@@ -208,15 +213,12 @@ def main():
             portfolio_df["Date"] = pd.to_datetime(portfolio_df["Date"])
 
             results = []
-
-            # 🔥 PERFORMANCE DATA
             performance = {}
 
             for _, row in portfolio_df.iterrows():
 
                 coin_df = df[df["Crypto"] == row["Crypto"]]
 
-                # BUY PRICE
                 buy_row = coin_df.iloc[(coin_df["Date"] - row["Date"]).abs().argsort()[:1]]
                 buy_price = buy_row["Close"].values[0]
 
@@ -229,28 +231,25 @@ def main():
 
                 results.append({
                     "Crypto": row["Crypto"],
-                    "Invested": row["Amount"],
-                    "Buy Price": buy_price,
-                    "Current Price": current_price,
-                    "Current Value": current_value,
-                    "Profit": profit,
-                    "Profit %": profit_pct
+                    "Invested": round(row["Amount"], 2),
+                    "Buy Price": round(buy_price, 2),
+                    "Current Price": round(current_price, 2),
+                    "Current Value": round(current_value, 2),
+                    "Profit": round(profit, 2),
+                    "Profit %": round(profit_pct, 2)
                 })
 
-                # 📈 PERFORMANCE BUILD
                 coin_df = coin_df.copy()
                 coin_df["Value"] = (coin_df["Close"] / buy_price) * row["Amount"]
 
-                for i, r in coin_df.iterrows():
+                for _, r in coin_df.iterrows():
                     performance[r["Date"]] = performance.get(r["Date"], 0) + r["Value"]
 
             final_df = pd.DataFrame(results)
 
             st.dataframe(final_df, use_container_width=True)
 
-            # =========================
             # 📈 PERFORMANCE CHART
-            # =========================
             perf_df = pd.DataFrame(list(performance.items()), columns=["Date", "Value"])
             perf_df = perf_df.sort_values("Date")
 
