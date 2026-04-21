@@ -48,12 +48,14 @@ def main():
     # 📊 DASHBOARD
     # =========================
     if page == "📊 Dashboard":
+        # 🔥 Toggle instead of confusion
+        show_all = st.checkbox("Show All Coins", value=True)
+        all_coins = sorted(df["Crypto"].unique())
+        if show_all:
+            selected_coins = all_coins
+        else:
+            selected_coins = st.multiselect("Select Coins",all_coins,default=all_coins[:3]  # default few coins)
 
-        st.markdown("## 📊 Market Overview")
-        coins = st.selectbox("Select Coin", df["Crypto"].unique())
-
-
-        f = df[df["Crypto"].isin(coins)].copy()
 
         # PRICE
         st.plotly_chart(
