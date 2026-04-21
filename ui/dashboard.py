@@ -284,8 +284,19 @@ def main():
 
                 coin_df = df[df["Crypto"] == row["Crypto"]]
 
-                buy_row = coin_df.iloc[(coin_df["Date"] - row["Date"]).abs().argsort()[:1]]
-                buy_price = buy_row["Close"].values[0]
+                if coin_df.empty:
+                    continue
+
+                # Find closest date safely
+                coin_df["diff"] = (coin_df["Date"] - row["Date"]).abs()
+
+                buy_row = coin_df.loc[coin_df["diff"].idxmin()] if not coin_df["diff"].isna().all() else None
+
+                if buy_row is None:
+                    continue
+                buy_price = buy_row["Close"] 
+                if coin_df.empty:
+                    continue
                 current_price = coin_df["Close"].iloc[-1]
 
                 units = row["Amount"] / buy_price
