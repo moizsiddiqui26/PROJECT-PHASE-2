@@ -1,21 +1,16 @@
 import streamlit as st
 
-# =========================
-# HEADER / NAVBAR (FUNCTIONAL)
-# =========================
-def render_header(user):
 
-    # Initialize page state
-    if "page" not in st.session_state:
-        st.session_state.page = "📊 Dashboard"
+# =========================
+# PUBLIC HEADER (BEFORE LOGIN)
+# =========================
+def render_public_header():
 
-    # ================= CSS =================
     st.markdown("""
     <style>
     .navbar {
         position: fixed;
         top: 0;
-        left: 0;
         width: 100%;
         background: linear-gradient(90deg, #0f0c29, #302b63);
         padding: 15px 40px;
@@ -32,35 +27,80 @@ def render_header(user):
         color: #00f5ff;
     }
 
-    .nav {
-        display: flex;
-        gap: 15px;
-    }
-
     .spacer {
         height: 80px;
     }
     </style>
+
+    <div class="navbar">
+        <div class="logo">🚀 Crypto SaaS</div>
+    </div>
+
+    <div class="spacer"></div>
     """, unsafe_allow_html=True)
 
-    # ================= HEADER =================
+    # Login/Register buttons
+    col1, col2 = st.columns([8,2])
+
+    with col2:
+        if st.button("Login"):
+            st.session_state.mode = "login"
+
+        if st.button("Register"):
+            st.session_state.mode = "register"
+
+
+# =========================
+# APP HEADER (AFTER LOGIN)
+# =========================
+def render_app_header(user):
+
+    # Default page
+    if "page" not in st.session_state:
+        st.session_state.page = "📊 Dashboard"
+
+    st.markdown("""
+    <style>
+    .navbar {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: linear-gradient(90deg, #0f0c29, #302b63);
+        padding: 10px 40px;
+        z-index: 999;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .spacer {
+        height: 90px;
+    }
+
+    .user {
+        font-size: 14px;
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     col1, col2, col3 = st.columns([2,6,2])
 
+    # LOGO
     with col1:
-        st.markdown('<div class="logo">🚀 Crypto SaaS</div>', unsafe_allow_html=True)
+        st.markdown("### 🚀 Crypto SaaS")
 
+    # NAVIGATION
     with col2:
         nav = st.radio(
             "",
             ["📊 Dashboard", "💰 Investment", "⚠ Risk", "🔮 Forecast", "👤 Portfolio"],
             horizontal=True,
-            label_visibility="collapsed",
-            key="nav_radio"
+            label_visibility="collapsed"
         )
         st.session_state.page = nav
 
+    # USER + LOGOUT
     with col3:
-        st.write(f"👤 {user}")
+        st.markdown(f"<div class='user'>👤 {user}</div>", unsafe_allow_html=True)
         if st.button("🚪 Logout"):
             st.session_state.auth = False
             st.rerun()
@@ -69,17 +109,24 @@ def render_header(user):
 
 
 # =========================
-# LIVE TICKER
+# LIVE MARKET TICKER (CARDS)
 # =========================
 def render_ticker(prices):
 
     st.markdown("### 💰 Live Market Prices")
 
+    if not prices:
+        st.warning("No price data available")
+        return
+
     cols = st.columns(len(prices))
 
     for i, (coin, data) in enumerate(prices.items()):
 
-        price = list(data.values())[0]
+        try:
+            price = list(data.values())[0]
+        except:
+            price = "N/A"
 
         cols[i].markdown(f"""
         <div style="
@@ -89,7 +136,9 @@ def render_ticker(prices):
             text-align: center;
             box-shadow: 0px 4px 8px rgba(0,0,0,0.3);
         ">
-            <div style="font-size: 13px; color: #aaa;">{coin.upper()}</div>
+            <div style="font-size: 13px; color: #aaa;">
+                {coin.upper()}
+            </div>
             <div style="font-size: 18px; font-weight: bold; color: #00ffcc;">
                 ${price}
             </div>
@@ -144,7 +193,7 @@ def show_error(msg):
 
 
 # =========================
-# LOADING
+# LOADING SPINNER
 # =========================
 def loading(text="Loading..."):
     return st.spinner(text)
