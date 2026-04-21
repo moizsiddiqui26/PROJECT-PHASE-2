@@ -2,6 +2,9 @@ import streamlit as st
 import os, importlib.util
 import time
 
+# =========================
+# MODULE LOADER
+# =========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def load_module(name, path):
@@ -11,7 +14,9 @@ def load_module(name, path):
     return module
 
 
-# ================= LOAD MODULES =================
+# =========================
+# LOAD MODULES
+# =========================
 auth = load_module("auth", os.path.join(BASE_DIR, "auth", "auth_service.py"))
 ui = load_module("ui", os.path.join(BASE_DIR, "ui", "components.py"))
 live = load_module("live", os.path.join(BASE_DIR, "services", "live_prices.py"))
@@ -25,19 +30,27 @@ render_ticker = ui.render_ticker
 get_live_prices = live.get_live_prices
 
 
-# ================= CONFIG =================
-st.set_page_config(layout="wide")
+# =========================
+# PAGE CONFIG
+# =========================
+st.set_page_config(page_title="🚀 Crypto SaaS", layout="wide")
 
 st.markdown("""
 <style>
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
+.stApp {
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: white;
+}
 </style>
 """, unsafe_allow_html=True)
 
 
-# ================= SESSION =================
+# =========================
+# SESSION STATE
+# =========================
 if "auth" not in st.session_state:
     st.session_state.auth = False
 
@@ -51,13 +64,17 @@ if "prices" not in st.session_state:
     st.session_state.prices = {}
 
 
-# ================= FAST PRICE FETCH =================
+# =========================
+# FAST PRICE FETCH
+# =========================
 @st.cache_data(ttl=2)
 def get_cached_prices():
     return get_live_prices()
 
 
-# ================= LOGIN =================
+# =========================
+# LOGIN UI
+# =========================
 def login_ui():
 
     st.markdown("""
@@ -73,23 +90,27 @@ def login_ui():
         email = st.text_input("Email")
         password = st.text_input("Password", type="password")
 
-        if st.button("Login", use_container_width=True):
+        if st.button("🚀 Login", use_container_width=True):
             res = login_user(email, password)
             if res["success"]:
                 st.session_state.auth = True
                 st.session_state.email = email
                 st.rerun()
+            else:
+                st.error(res["msg"])
 
-        if st.button("Register", use_container_width=True):
+        if st.button("📝 Register", use_container_width=True):
             st.session_state.mode = "register"
 
 
-# ================= MAIN APP =================
+# =========================
+# MAIN APP
+# =========================
 def main_app():
 
     render_header(st.session_state.email)
 
-    # 🔥 SMART AUTO REFRESH (NO LOOP)
+    # ✅ Update prices every 2 seconds
     now = time.time()
 
     if now - st.session_state.last_update > 2:
@@ -98,26 +119,33 @@ def main_app():
 
     prices = st.session_state.prices
 
-    # UI
+    # =========================
+    # TICKER
+    # =========================
     if prices:
         render_ticker(prices)
     else:
         st.info("⚡ Fetching live prices...")
 
-    # small spacing
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
-    # load dashboard
+    # =========================
+    # DASHBOARD
+    # =========================
     dashboard = load_module("dashboard", os.path.join(BASE_DIR, "ui", "dashboard.py"))
     dashboard.main()
 
-    # 🔁 trigger refresh
-    st.experimental_rerun()
+    # =========================
+    # AUTO REFRESH (SAFE)
+    # =========================
+    time.sleep(2)
+    st.rerun()
 
 
-# ================= ROUTING =================
+# =========================
+# ROUTING
+# =========================
 if not st.session_state.auth:
     login_ui()
 else:
     main_app()
-
