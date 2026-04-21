@@ -1,5 +1,5 @@
 # =========================
-# SAFE MODULE LOADER (NO IMPORT ISSUES)
+# SAFE MODULE LOADER
 # =========================
 import os
 import importlib.util
@@ -12,15 +12,16 @@ def load_module(name, path):
     spec.loader.exec_module(module)
     return module
 
-# Load modules
+# =========================
+# LOAD MODULES
+# =========================
 crypto_api = load_module("crypto_api", os.path.join(BASE_DIR, "services", "crypto_api.py"))
 email_service = load_module("email_service", os.path.join(BASE_DIR, "services", "email_service.py"))
 auth_service = load_module("auth_service", os.path.join(BASE_DIR, "auth", "auth_service.py"))
 db_module = load_module("database", os.path.join(BASE_DIR, "db", "database.py"))
 ui_components = load_module("components", os.path.join(BASE_DIR, "ui", "components.py"))
-config_module = load_module("config", os.path.join(BASE_DIR, "config.py"))
 
-# Extract functions
+# Extract
 get_top_10_prices = crypto_api.get_top_10_prices
 send_welcome_email = email_service.send_welcome_email
 send_otp_email = email_service.send_otp_email
@@ -35,25 +36,20 @@ init_db = db_module.init_db
 render_header = ui_components.render_header
 render_ticker = ui_components.render_ticker
 
-
 # =========================
-# NORMAL IMPORTS
+# IMPORTS
 # =========================
 import streamlit as st
-import time
 
 # =========================
-# INIT DATABASE
+# INIT
 # =========================
 init_db()
 
-# =========================
-# PAGE CONFIG
-# =========================
 st.set_page_config(page_title="🚀 Crypto SaaS Platform", layout="wide")
 
 # =========================
-# HIDE DEFAULT STREAMLIT UI
+# HIDE DEFAULT UI
 # =========================
 st.markdown("""
 <style>
@@ -101,10 +97,12 @@ def render_top():
     prices = get_top_10_prices()
     render_ticker(prices)
 
+
 # =========================
 # AUTH UI
 # =========================
 def login_ui():
+
     render_top()
 
     if st.session_state.mode == "login":
@@ -119,6 +117,7 @@ def login_ui():
         with col1:
             if st.button("Login"):
                 res = login_user(email, password)
+
                 if res["success"]:
                     st.session_state.auth = True
                     st.session_state.email = res["user"]["email"]
@@ -145,6 +144,7 @@ def login_ui():
 
         if st.button("Create Account"):
             res = register_user(name, email, password)
+
             if res["success"]:
                 send_welcome_email(email)
                 st.success(res["msg"])
@@ -165,6 +165,7 @@ def login_ui():
             otp = generate_login_otp()
             st.session_state.otp = otp
             st.session_state.temp_email = email
+
             send_otp_email(email, otp)
             st.success("OTP sent")
 
@@ -182,22 +183,18 @@ def login_ui():
         if st.button("Back"):
             st.session_state.mode = "login"
 
+
 # =========================
 # MAIN APP
 # =========================
 def main_app():
+
     render_top()
 
-    col1, col2 = st.columns([9, 1])
-
-    with col2:
-        if st.button("🚪 Logout"):
-            st.session_state.auth = False
-            st.rerun()
-
-    # load dashboard safely
+    # ✅ Load dashboard (navigation handled inside header)
     dashboard = load_module("dashboard", os.path.join(BASE_DIR, "ui", "dashboard.py"))
     dashboard.main()
+
 
 # =========================
 # ROUTING
