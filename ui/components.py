@@ -107,6 +107,9 @@ def render_header(user):
 # =========================
 # LIVE TICKER (IMPROVED)
 # =========================
+import requests
+import pandas as pd
+
 def render_ticker(prices):
 
     st.markdown("### 💰 Live Market Prices")
@@ -124,12 +127,24 @@ def render_ticker(prices):
         "polygon": "MATIC"
     }
 
+    # 🪙 LOGOS (CoinGecko CDN)
+    logo_map = {
+        "bitcoin": "https://assets.coingecko.com/coins/images/1/small/bitcoin.png",
+        "ethereum": "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
+        "tether": "https://assets.coingecko.com/coins/images/325/small/Tether.png",
+        "binancecoin": "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
+        "ripple": "https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png",
+        "solana": "https://assets.coingecko.com/coins/images/4128/small/solana.png",
+        "cardano": "https://assets.coingecko.com/coins/images/975/small/cardano.png",
+        "dogecoin": "https://assets.coingecko.com/coins/images/5/small/dogecoin.png",
+        "tron": "https://assets.coingecko.com/coins/images/1094/small/tron-logo.png",
+        "polygon": "https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png"
+    }
+
     if not prices:
         return
 
     coins = list(prices.items())
-
-    # ✅ FIXED GRID: 4 per row (best balance)
     cols_per_row = 4
 
     for i in range(0, len(coins), cols_per_row):
@@ -139,34 +154,52 @@ def render_ticker(prices):
         for j in range(cols_per_row):
             if j < len(row):
                 coin, data = row[j]
+
                 symbol = symbol_map.get(coin, coin.upper())
                 price = list(data.values())[0]
+                logo = logo_map.get(coin, "")
 
-                cols[j].markdown(f"""
-                <div style="
-                    background: rgba(255,255,255,0.05);
-                    padding: 18px;
-                    border-radius: 14px;
-                    text-align: center;
-                    box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
-                    transition: 0.3s;
-                ">
-                    <div style="color:gray;font-size:12px;">
-                        {symbol}
-                    </div>
+                # 📈 MINI CHART DATA (last 7 days)
+                try:
+                    url = f"https://api.coingecko.com/api/v3/coins/{coin}/market_chart"
+                    res = requests.get(url, params={"vs_currency": "usd", "days": 7}, timeout=5)
+                    chart_data = res.json()["prices"]
+
+                    df = pd.DataFrame(chart_data, columns=["time", "price"])
+                    spark = df["price"].tail(30)
+
+                except:
+                    spark = None
+
+                with cols[j]:
+                    st.markdown(f"""
                     <div style="
-                        font-size:20px;
-                        font-weight:bold;
-                        color:#00ffcc;
+                        background: rgba(255,255,255,0.05);
+                        padding: 15px;
+                        border-radius: 14px;
+                        box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
                     ">
-                        ${price}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <img src="{logo}" width="25">
+                            <span style="color:gray;">{symbol}</span>
+                        </div>
 
-        # ✅ proper spacing between rows
-        st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
-# =========================
+                        <div style="
+                            font-size:20px;
+                            font-weight:bold;
+                            color:#00ffcc;
+                            margin-top:5px;
+                        ">
+                            ${price}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    # 📈 Sparkline chart
+                    if spark is not None:
+                        st.line_chart(spark, height=80, use_container_width=True)
+
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)# =========================
 # CARD COMPONENT
 # =========================
 def card(title, value, color="white"):
