@@ -59,12 +59,41 @@ def main():
 
         f = df[df["Crypto"].isin(coins)].copy()
 
+        # PRICE
         st.plotly_chart(
             px.line(f, x="Date", y="Close", color="Crypto",
                     title="📈 Price Trends"),
             use_container_width=True
         )
 
+        # RETURNS
+        f["Return"] = f.groupby("Crypto")["Close"].pct_change()
+
+        st.plotly_chart(
+            px.line(f, x="Date", y="Return", color="Crypto",
+                    title="📊 Returns"),
+            use_container_width=True
+        )
+
+        # VOLATILITY
+        f["Volatility"] = f.groupby("Crypto")["Return"].transform(
+            lambda x: x.rolling(7).std()
+        )
+
+        st.plotly_chart(
+            px.line(f, x="Date", y="Volatility", color="Crypto",
+                    title="⚠ Volatility"),
+            use_container_width=True
+        )
+
+        # CORRELATION
+        pivot = f.pivot(index="Date", columns="Crypto", values="Close")
+        corr = pivot.pct_change().corr()
+
+        st.plotly_chart(
+            px.imshow(corr, text_auto=True, title="🔗 Correlation Matrix"),
+            use_container_width=True
+        )
     # =========================
     # 💰 INVESTMENT
     # =========================
