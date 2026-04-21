@@ -110,7 +110,7 @@ def render_header(user):
 # =========================
 def render_ticker(prices):
 
-    st.markdown('<div class="section-title">💰 Live Market Prices</div>', unsafe_allow_html=True)
+    st.markdown("### 💰 Live Market Prices")
 
     symbol_map = {
         "bitcoin": "BTC",
@@ -126,26 +126,36 @@ def render_ticker(prices):
     }
 
     if not prices:
-        st.warning("⚠ Unable to load prices")
         return
 
-    cols = st.columns(len(prices))
+    coins = list(prices.items())
 
-    for i, (coin, data) in enumerate(prices.items()):
+    # ✅ GRID: 5 per row
+    for i in range(0, len(coins), 5):
+        row = coins[i:i+5]
+        cols = st.columns(len(row))
 
-        symbol = symbol_map.get(coin, coin.upper())
-        price = list(data.values())[0]
+        for col, (coin, data) in zip(cols, row):
+            symbol = symbol_map.get(coin, coin.upper())
+            price = list(data.values())[0]
 
-        cols[i].markdown(f"""
-        <div class="ticker">
-            <div style="color:gray;font-size:12px;">{symbol}</div>
-            <div style="font-size:18px;font-weight:bold;color:#00ffcc;">
-                ${price}
+            col.markdown(f"""
+            <div style="
+                background: #1e1e2f;
+                padding: 12px;
+                border-radius: 10px;
+                text-align: center;
+                box-shadow: 0px 3px 8px rgba(0,0,0,0.3);
+            ">
+                <div style="color:gray;font-size:12px;">{symbol}</div>
+                <div style="font-size:16px;font-weight:bold;color:#00ffcc;">
+                    ${price}
+                </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
+    # ✅ SMALL spacing (not huge)
+    st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
 # =========================
 # CARD COMPONENT
 # =========================
