@@ -1,4 +1,3 @@
-```python
 import websocket
 import json
 import threading
@@ -58,4 +57,3 @@ def start_ws_thread():
 
         thread = threading.Thread(target=start_ws, daemon=True)
         thread.start()
-```
