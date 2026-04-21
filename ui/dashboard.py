@@ -201,29 +201,79 @@ def main():
     # =========================
     elif page == "👤 Portfolio":
 
-        st.markdown("## 👤 Portfolio Manager")
+    st.markdown("## 👤 Portfolio Manager")
 
-        email = st.session_state.get("email")
+    email = st.session_state.get("email")
 
-        coin = st.selectbox("Crypto", df["Crypto"].unique())
-        amount = st.number_input("Amount", min_value=0.0)
-        date = st.date_input("Date")
+    coin = st.selectbox("Crypto", df["Crypto"].unique())
+    amount = st.number_input("Investment Amount ($)", min_value=0.0)
+    date = st.date_input("Purchase Date")
 
-        if st.button("Add Investment"):
-            add_holding(email, coin, amount, str(date))
-            st.success("✅ Added successfully")
+    if st.button("Add Investment"):
+        add_holding(email, coin, amount, str(date))
+        st.success("✅ Investment added")
 
-        data = get_holdings(email)
+    data = get_holdings(email)
 
-        if data:
-            pdf = pd.DataFrame(data, columns=["Crypto", "Amount", "Date"])
+    if data:
 
-            st.dataframe(pdf, use_container_width=True)
+        portfolio_df = pd.DataFrame(data, columns=["Crypto", "Amount", "Date"])
 
-            st.plotly_chart(
-                px.pie(pdf, names="Crypto", values="Amount",
-                       title="📊 Portfolio Distribution"),
-                use_container_width=True
-            )
-        else:
-            st.info("No investments yet")
+        # Convert date
+        portfolio_df["Date"] = pd.to_datetime(portfolio_df["Date"])
+
+        results = []
+
+        for _, row in portfolio_df.iterrows():
+
+            coin_df = df[df["Crypto"] == row["Crypto"]]
+
+            # 🔥 BUY PRICE (closest date)
+            buy_row = coin_df.iloc[(coin_df["Date"] - row["Date"]).abs().argsort()[:1]]
+            buy_price = buy_row["Close"].values[0]
+
+            # 🔥 CURRENT PRICE
+            current_price = coin_df["Close"].iloc[-1]
+
+            # 🔥 CALCULATIONS
+            units = row["Amount"] / buy_price
+            current_value = units * current_price
+            profit = current_value - row["Amount"]
+            profit_pct = (profit / row["Amount"]) * 100
+
+            results.append({
+                "Crypto": row["Crypto"],
+                "Invested ($)": round(row["Amount"], 2),
+                "Buy Price": round(buy_price, 2),
+                "Current Price": round(current_price, 2),
+                "Current Value ($)": round(current_value, 2),
+                "Profit/Loss ($)": round(profit, 2),
+                "Profit/Loss %": round(profit_pct, 2),
+                "Date": row["Date"].date()
+            })
+
+        final_df = pd.DataFrame(results)
+
+        # 🔥 STYLE COLORS
+        def color_profit(val):
+            return "color: green" if val > 0 else "color: red"
+
+        st.dataframe(
+            final_df.style.applymap(color_profit, subset=["Profit/Loss ($)", "Profit/Loss %"]),
+            use_container_width=True
+        )
+
+        # TOTAL SUMMARY
+        total_invested = final_df["Invested ($)"].sum()
+        total_current = final_df["Current Value ($)"].sum()
+        total_profit = total_current - total_invested
+
+        col1, col2, col3 = st.columns(3)
+
+        col1.metric("Total Invested", f"${total_invested:.2f}")
+        col2.metric("Current Value", f"${total_current:.2f}")
+        col3.metric("Total Profit/Loss", f"${total_profit:.2f}")
+
+    else:
+        st.info("No investments yet")
+    
