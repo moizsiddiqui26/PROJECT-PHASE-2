@@ -1,4 +1,3 @@
-```python
 import requests
 
 SYMBOL_MAP = {
@@ -33,4 +32,3 @@ def get_live_prices():
 
     except:
         return {}
-```
