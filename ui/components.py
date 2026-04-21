@@ -1,26 +1,10 @@
+
 import streamlit as st
 
-# =========================
-# HEADER
-# =========================
 def render_header(user):
 
     if "page" not in st.session_state:
         st.session_state.page = "📊 Dashboard"
-
-    st.markdown("""
-    <style>
-    .header {
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        background: linear-gradient(90deg, #0f0c29, #302b63);
-        padding: 10px 20px;
-        border-radius: 0 0 10px 10px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.4);
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([2,6,2])
 
@@ -45,27 +29,12 @@ def render_header(user):
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
 
-# =========================
-# TICKER (FIXED GRID)
-# =========================
 def render_ticker(prices):
 
     st.markdown("### 💰 Live Market Prices")
 
-    symbol_map = {
-        "bitcoin": "BTC",
-        "ethereum": "ETH",
-        "tether": "USDT",
-        "binancecoin": "BNB",
-        "ripple": "XRP",
-        "solana": "SOL",
-        "cardano": "ADA",
-        "dogecoin": "DOGE",
-        "tron": "TRX",
-        "polygon": "MATIC"
-    }
-
     if not prices:
+        st.warning("Loading prices...")
         return
 
     coins = list(prices.items())
@@ -77,9 +46,7 @@ def render_ticker(prices):
 
         for j in range(cols_per_row):
             if j < len(row):
-                coin, data = row[j]
-                symbol = symbol_map.get(coin, coin.upper())
-                price = list(data.values())[0]
+                symbol, price = row[j]
 
                 cols[j].markdown(f"""
                 <div style="
@@ -97,7 +64,7 @@ def render_ticker(prices):
                         font-weight:bold;
                         color:#00ffcc;
                     ">
-                        ${price}
+                        ${price:.2f}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
