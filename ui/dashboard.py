@@ -82,8 +82,41 @@ def main():
             st.warning("Select at least one coin")
             return
 
-        # 🔥 METRICS CARDS
+        # =========================
+        # 💎 TOP METRICS (CLEAN CARDS)
+        # =========================
+        st.markdown("### 💎 Market Snapshot")
 
+        latest = f.groupby("Crypto").last().reset_index()
+
+        top_coins = latest.head(5)  # limit to 5 for clean UI
+        cols = st.columns(len(top_coins))
+
+        for i, row in top_coins.iterrows():
+            price = round(row["Close"], 2)
+
+            change = f[f["Crypto"] == row["Crypto"]]["Close"].pct_change().iloc[-1]
+            change_pct = round(change * 100, 2) if pd.notna(change) else 0
+
+            color = "#00ffcc" if change_pct >= 0 else "#ff4b4b"
+
+            cols[i].markdown(f"""
+            <div style="
+            background: rgba(255,255,255,0.06);
+            padding: 20px;
+            border-radius: 14px;
+            text-align: center;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
+            ">
+            <div style="color:gray;">{row['Crypto']}</div>
+            <div style="font-size:22px;font-weight:bold;color:#00ffcc;">
+            ${price}
+            </div>
+            <div style="color:{color}; font-size:13px;">
+            {change_pct}%
+            </div>
+            </div>
+            """, unsafe_allow_html=True)
         # 📈 PRICE TREND
         fig1 = px.line(
             f, x="Date", y="Close", color="Crypto",
