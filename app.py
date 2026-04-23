@@ -182,29 +182,18 @@ def main_app():
 
     render_header(st.session_state.email)
 
-    now = time.time()
-
-    if now - st.session_state.last_update > 2:
-        st.session_state.prices = get_cached_prices()
-        st.session_state.last_update = now
-
-    prices = st.session_state.prices
+    prices = get_cached_prices()
 
     if prices:
         render_ticker(prices)
     else:
         st.info("⚡ Fetching live prices...")
 
-    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-
-    dashboard = load_module("dashboard", os.path.join(BASE_DIR, "ui", "dashboard.py"))
+    # ✅ ONLY THIS
     dashboard.main()
 
-    # 🔄 AUTO REFRESH
-    time.sleep(2)
-    st.rerun()
-
-
+    # 🔥 IMPORTANT (STOP EXECUTION)
+    st.stop()
 # =========================
 # ROUTING
 # =========================
