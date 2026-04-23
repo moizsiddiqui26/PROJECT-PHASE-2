@@ -161,64 +161,6 @@ def render_dashboard(df):
         st.plotly_chart(fig4, use_container_width=True, key="dist_chart")
 
         st.caption("📊 Return distribution — wide spread = high risk.")
-
-    # =========================
-    # 📈 PRICE TREND
-    # =========================
-    col1, col2 = st.columns(2)
-
-    with col1:
-        fig = px.line(f, x="Date", y="Close", color="Crypto", template="plotly_dark")
-        st.plotly_chart(fig, use_container_width=True)
-
-        st.caption("📈 Shows how crypto prices change over time. Helps identify trends and market direction.")
-
-    # =========================
-    # 📉 RETURNS
-    # =========================
-    f["Return"] = f.groupby("Crypto")["Close"].pct_change()
-
-    with col2:
-        fig = px.line(f, x="Date", y="Return", color="Crypto", template="plotly_dark")
-        st.plotly_chart(fig, use_container_width=True)
-
-        st.caption("📉 Displays daily returns (price changes). High spikes indicate volatility and higher risk.")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # =========================
-    # 🔥 CORRELATION
-    # =========================
-    pivot = f.pivot(index="Date", columns="Crypto", values="Close")
-    corr = pivot.pct_change().corr()
-
-    fig = px.imshow(corr, text_auto=True, template="plotly_dark")
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.caption("🔥 Shows how cryptocurrencies move relative to each other. Helps in diversification decisions.")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # =========================
-    # 🆕 NEW EDA: DISTRIBUTION
-    # =========================
-    st.markdown("### 📊 Return Distribution (Risk View)")
-
-    fig = px.histogram(
-        f,
-        x="Return",
-        color="Crypto",
-        nbins=50,
-        template="plotly_dark",
-        opacity=0.6
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.caption(
-        "📊 Shows distribution of returns. Wide spread = high risk. Narrow = stable asset."
-    )
-
 # ============================================================
 # 💰 INVESTMENT
 # ============================================================
