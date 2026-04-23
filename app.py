@@ -145,11 +145,10 @@ def login_ui():
 
                 if res["success"]:
                     st.success("Account created successfully 🎉")
-
-                    # ✅ Auto login
-                    st.session_state.auth = True
-                    st.session_state.email = email
+                    st.session_state.mode = "login"
                     st.rerun()
+                   
+                    
                 else:
                     st.error(res["msg"])
 
