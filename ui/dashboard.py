@@ -54,8 +54,6 @@ def main():
     elif page == "👤 Portfolio":
         render_portfolio(df)
 
-    else:
-        render_dashboard(df)
 
 
 # ============================================================
