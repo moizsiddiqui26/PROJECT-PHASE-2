@@ -231,7 +231,7 @@ def render_portfolio(df):
         add_holding(email, coin, amount, str(date))
         st.success("Added!")
 
-    space()
+    st.markdown("<br>", unsafe_allow_html=True)
 
     data = get_holdings(email)
 
@@ -242,4 +242,60 @@ def render_portfolio(df):
     portfolio_df = pd.DataFrame(data, columns=["Crypto", "Amount", "Date"])
     portfolio_df["Date"] = pd.to_datetime(portfolio_df["Date"])
 
+    # =========================
+    # 🔥 CALCULATE CURRENT PRICE
+    # =========================
+    latest_prices = df.groupby("Crypto").last().reset_index()[["Crypto", "Close"]]
+    latest_prices.rename(columns={"Close": "Current Price"}, inplace=True)
+
+    # Merge with portfolio
+    portfolio_df = portfolio_df.merge(latest_prices, on="Crypto", how="left")
+
+    # =========================
+    # 🔥 CALCULATE BUY PRICE
+    # =========================
+    def get_buy_price(row):
+        coin_df = df[df["Crypto"] == row["Crypto"]]
+        past_data = coin_df[coin_df["Date"] <= row["Date"]]
+
+        if past_data.empty:
+            return np.nan
+
+        return past_data.iloc[-1]["Close"]
+
+    portfolio_df["Buy Price"] = portfolio_df.apply(get_buy_price, axis=1)
+
+    # =========================
+    # 🔥 CALCULATE PROFIT
+    # =========================
+    portfolio_df["Quantity"] = portfolio_df["Amount"] / portfolio_df["Buy Price"]
+
+    portfolio_df["Current Value"] = portfolio_df["Quantity"] * portfolio_df["Current Price"]
+
+    portfolio_df["Profit ($)"] = portfolio_df["Current Value"] - portfolio_df["Amount"]
+
+    portfolio_df["Profit (%)"] = (portfolio_df["Profit ($)"] / portfolio_df["Amount"]) * 100
+
+    # Clean format
+    portfolio_df = portfolio_df.round(2)
+
+    # =========================
+    # 💎 DISPLAY
+    # =========================
     st.dataframe(portfolio_df, use_container_width=True)
+
+    # =========================
+    # 📊 TOTAL PORTFOLIO SUMMARY
+    # =========================
+    total_invested = portfolio_df["Amount"].sum()
+    total_value = portfolio_df["Current Value"].sum()
+    total_profit = total_value - total_invested
+    profit_pct = (total_profit / total_invested) * 100 if total_invested > 0 else 0
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Total Invested", f"${total_invested:.2f}")
+    col2.metric("Current Value", f"${total_value:.2f}")
+    col3.metric("Profit", f"${total_profit:.2f} ({profit_pct:.2f}%)")
