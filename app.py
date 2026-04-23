@@ -97,7 +97,6 @@ def get_cached_prices():
 # =========================
 # LOGIN UI
 # =========================
-```python
 def login_ui():
 
     st.markdown("""
@@ -157,7 +156,6 @@ def login_ui():
             if st.button("⬅ Back to Login"):
                 st.session_state.mode = "login"
                 st.rerun()
-```
 # =========================
 # MAIN APP
 # =========================
