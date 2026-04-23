@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -18,6 +19,13 @@ def load_data():
 
 
 # =========================
+# UI HELPERS
+# =========================
+def section_space():
+    st.markdown("<div style='height:25px'></div>", unsafe_allow_html=True)
+
+
+# =========================
 # MAIN
 # =========================
 def main():
@@ -29,17 +37,16 @@ def main():
         st.error("⚠ Failed to load data")
         return
 
-    # =========================
+
+    # ============================================================
     # 📊 DASHBOARD
-    # =========================
+    # ============================================================
     if page == "📊 Dashboard":
 
         st.markdown('<div class="section-title">📊 Market Overview</div>', unsafe_allow_html=True)
 
         all_coins = sorted(df["Crypto"].unique())
-        default_coins = all_coins[:4]
-
-        coins = st.multiselect("Select Coins", all_coins, default=default_coins)
+        coins = st.multiselect("Select Coins", all_coins, default=all_coins[:4])
 
         f = df[df["Crypto"].isin(coins)].copy()
 
@@ -47,11 +54,10 @@ def main():
             st.warning("Select at least one coin")
             return
 
+        section_space()
+
         # ================= KPI =================
         latest = f.groupby("Crypto").last().reset_index()
-
-        st.markdown('<div class="section-title">💎 Market Snapshot</div>', unsafe_allow_html=True)
-
         cols = st.columns(min(4, len(latest)))
 
         for i, row in latest.head(4).iterrows():
@@ -74,35 +80,33 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-        # ================= PRICE =================
-        fig1 = px.line(f, x="Date", y="Close", color="Crypto", template="plotly_dark")
+        section_space()
 
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.plotly_chart(fig1, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # ================= PRICE + RETURNS =================
+        col1, col2 = st.columns(2)
 
-        # ================= RETURNS =================
-        f["Return"] = f.groupby("Crypto")["Close"].pct_change()
+        with col1:
+            fig1 = px.line(f, x="Date", y="Close", color="Crypto", template="plotly_dark")
+            st.plotly_chart(fig1, use_container_width=True)
 
-        fig2 = px.line(f, x="Date", y="Return", color="Crypto", template="plotly_dark")
+        with col2:
+            f["Return"] = f.groupby("Crypto")["Close"].pct_change()
+            fig2 = px.line(f, x="Date", y="Return", color="Crypto", template="plotly_dark")
+            st.plotly_chart(fig2, use_container_width=True)
 
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.plotly_chart(fig2, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        section_space()
 
         # ================= CORRELATION =================
         pivot = f.pivot(index="Date", columns="Crypto", values="Close")
         corr = pivot.pct_change().corr()
 
         fig3 = px.imshow(corr, text_auto=True, template="plotly_dark")
-
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.plotly_chart(fig3, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
-    # =========================
+
+    # ============================================================
     # 💰 INVESTMENT
-    # =========================
+    # ============================================================
     elif page == "💰 Investment":
 
         st.markdown('<div class="section-title">💰 Smart Investment Allocation</div>', unsafe_allow_html=True)
@@ -119,7 +123,7 @@ def main():
 
         m = returns.merge(vol, on="Crypto")
 
-        # ✅ FIXED LOGIC (NO NEGATIVE)
+        # FIX: no negative allocations
         m["Return"] = m["Return"].clip(lower=0)
 
         if risk == "Low":
@@ -137,17 +141,21 @@ def main():
         m["Allocation %"] = m["Allocation %"].round(2)
         m["Investment"] = m["Investment"].round(2)
 
-        st.dataframe(m, use_container_width=True)
+        section_space()
 
-        fig = px.pie(m, names="Crypto", values="Investment", template="plotly_dark")
+        col1, col2 = st.columns([1,1])
 
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        with col1:
+            st.dataframe(m, use_container_width=True)
 
-    # =========================
+        with col2:
+            fig = px.pie(m, names="Crypto", values="Investment", template="plotly_dark")
+            st.plotly_chart(fig, use_container_width=True)
+
+
+    # ============================================================
     # ⚠ RISK
-    # =========================
+    # ============================================================
     elif page == "⚠ Risk":
 
         st.markdown('<div class="section-title">⚠ Risk Analysis</div>', unsafe_allow_html=True)
@@ -155,15 +163,18 @@ def main():
         risk_df = run_risk_analysis(df)
         st.dataframe(risk_df, use_container_width=True)
 
+        section_space()
+
         portfolio = calculate_portfolio_risk(df)
 
         col1, col2 = st.columns(2)
         col1.metric("Risk Level", portfolio["level"])
         col2.metric("Risk Score", portfolio["score"])
 
-    # =========================
+
+    # ============================================================
     # 🔮 FORECAST
-    # =========================
+    # ============================================================
     elif page == "🔮 Forecast":
 
         st.markdown('<div class="section-title">🔮 Forecast</div>', unsafe_allow_html=True)
@@ -176,14 +187,17 @@ def main():
         result = get_forecast_summary(coin_df, amount, 7)
 
         if result:
+            section_space()
+
             col1, col2, col3 = st.columns(3)
             col1.metric("Predicted Price", f"${result['predicted_price']:.2f}")
             col2.metric("Expected Value", f"${result['expected_value']:.2f}")
             col3.metric("Profit %", f"{result['profit_pct']:.2f}%")
 
-    # =========================
+
+    # ============================================================
     # 👤 PORTFOLIO
-    # =========================
+    # ============================================================
     elif page == "👤 Portfolio":
 
         st.markdown('<div class="section-title">👤 Portfolio</div>', unsafe_allow_html=True)
@@ -199,6 +213,8 @@ def main():
             add_holding(email, coin, amount, str(date))
             st.success("Added!")
 
+        section_space()
+
         data = get_holdings(email)
 
         if not data:
@@ -209,4 +225,4 @@ def main():
         portfolio_df["Date"] = pd.to_datetime(portfolio_df["Date"])
 
         st.dataframe(portfolio_df, use_container_width=True)
-
+```
