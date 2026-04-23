@@ -179,7 +179,6 @@ def login_ui():
 # MAIN APP
 # =========================
 def main_app():
-
     render_header(st.session_state.email)
 
     prices = get_cached_prices()
