@@ -89,7 +89,30 @@ def delete_holding(email, crypto):
     conn.commit()
     conn.close()
 
+def create_alert(email, coin, condition, target_price):
+    """condition: 'above' or 'below'"""
+    conn = get_conn()
+    conn.execute("""
+        INSERT INTO alerts (email, coin, condition, target_price, active)
+        VALUES (?, ?, ?, ?, 1)
+    """, (email, coin, condition, target_price))
+    conn.commit()
+    conn.close()
 
+def get_alerts(email):
+    conn = get_conn()
+    rows = conn.execute("""
+        SELECT id, coin, condition, target_price, active
+        FROM alerts WHERE email = ?
+    """, (email,)).fetchall()
+    conn.close()
+    return rows
+
+def deactivate_alert(alert_id):
+    conn = get_conn()
+    conn.execute("UPDATE alerts SET active = 0 WHERE id = ?", (alert_id,))
+    conn.commit()
+    conn.close()
 # =========================
 # OPTIONAL ANALYTICS HELPERS
 # =========================
