@@ -29,12 +29,8 @@ def render_header(user):
             st.markdown("### 🚀 Crypto SaaS")
 
         with col2:
-            nav = st.radio(
-                "",
-                ["📊 Dashboard", "💰 Investment", "⚠ Risk", "🔮 Forecast", "👤 Portfolio"],
-                horizontal=True,
-                label_visibility="collapsed"
-            )
+            nav = st.radio("", ["📊 Dashboard", "💰 Investment", "⚠ Risk",
+                    "🔮 Forecast", "👤 Portfolio", "🔔 Alerts"], ...)
             st.session_state.page = nav
 
         with col3:
