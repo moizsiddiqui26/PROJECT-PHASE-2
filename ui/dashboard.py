@@ -364,3 +364,4 @@ def render_portfolio(df):
         st.plotly_chart(fig2, use_container_width=True, key="portfolio_profit")
 
         st.caption("📈 Shows which coins are making profit or loss.")
+
