@@ -1,6 +1,7 @@
 import streamlit as st
 import os, importlib.util
 import time
+
 st.markdown("""
 <style>
 
@@ -22,6 +23,7 @@ div[data-testid="stAppViewContainer"] {
 </style>
 """, unsafe_allow_html=True)
 
+
 # =========================
 # MODULE LOADER
 # =========================
@@ -37,23 +39,25 @@ def load_module(name, path):
 # =========================
 # LOAD MODULES
 # =========================
-auth = load_module("auth", os.path.join(BASE_DIR, "auth", "auth_service.py"))
-ui = load_module("ui", os.path.join(BASE_DIR, "ui", "components.py"))
-live = load_module("live", os.path.join(BASE_DIR, "services", "live_prices.py"))
-db = load_module("db", os.path.join(BASE_DIR, "db", "database.py"))
+auth  = load_module("auth",  os.path.join(BASE_DIR, "auth",     "auth_service.py"))
+ui    = load_module("ui",    os.path.join(BASE_DIR, "ui",       "components.py"))
+live  = load_module("live",  os.path.join(BASE_DIR, "services", "live_prices.py"))
+db    = load_module("db",    os.path.join(BASE_DIR, "db",       "database.py"))
+alert = load_module("alert", os.path.join(BASE_DIR, "services", "alert_engine.py"))
 
 # =========================
 # INIT DB (CRITICAL)
 # =========================
 db.init_db()
 
-login_user = auth.login_user
+login_user    = auth.login_user
 register_user = auth.register_user
 
 render_header = ui.render_header
 render_ticker = ui.render_ticker
 
 get_live_prices = live.get_live_prices
+check_alerts    = alert.check_alerts
 
 
 # =========================
@@ -95,6 +99,9 @@ if "last_update" not in st.session_state:
 if "prices" not in st.session_state:
     st.session_state.prices = {}
 
+if "alert_notifications" not in st.session_state:
+    st.session_state.alert_notifications = []
+
 
 # =========================
 # PRICE CACHE
@@ -120,7 +127,7 @@ def login_ui():
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([2,4,2])
+    col1, col2, col3 = st.columns([2, 4, 2])
 
     with col2:
 
@@ -129,14 +136,14 @@ def login_ui():
 
             st.markdown("### 🔐 Login")
 
-            email = st.text_input("Email")
+            email    = st.text_input("Email")
             password = st.text_input("Password", type="password")
 
             if st.button("🚀 Login", use_container_width=True):
                 res = login_user(email, password)
 
                 if res["success"]:
-                    st.session_state.auth = True
+                    st.session_state.auth  = True
                     st.session_state.email = email
                     st.success("Login successful 🚀")
 
@@ -154,8 +161,8 @@ def login_ui():
 
             st.markdown("### 📝 Create Account")
 
-            name = st.text_input("Name")
-            email = st.text_input("Email")
+            name     = st.text_input("Name")
+            email    = st.text_input("Email")
             password = st.text_input("Password", type="password")
 
             if st.button("✅ Create Account", use_container_width=True):
@@ -177,20 +184,47 @@ def login_ui():
 
 
 # =========================
+# SHOW IN-APP NOTIFICATIONS
+# =========================
+def show_alert_notifications():
+    """Display any triggered alerts as toast banners at top of page."""
+    notifications = st.session_state.alert_notifications
+
+    if not notifications:
+        return
+
+    for note in notifications:
+        st.toast(note, icon="🚨")
+
+    # Clear after showing
+    st.session_state.alert_notifications = []
+
+
+# =========================
 # MAIN APP
 # =========================
 def main_app():
 
     render_header(st.session_state.email)
 
+    # 🔔 SHOW ALERT NOTIFICATIONS (if any triggered last cycle)
+    show_alert_notifications()
+
     now = time.time()
 
     if now - st.session_state.last_update > 2:
-        st.session_state.prices = get_cached_prices()
+        st.session_state.prices     = get_cached_prices()
         st.session_state.last_update = now
-    # 🔔 CHECK ALERTS ON EVERY REFRESH
+
+        # 🔔 CHECK PRICE ALERTS ON EVERY REFRESH
         if st.session_state.prices:
-            check_alerts(st.session_state.prices)
+            triggered = check_alerts(st.session_state.prices)
+
+            # Store triggered alert messages for in-app toasts
+            if triggered:
+                for t in triggered:
+                    msg = f"{t['coin']} hit ${t['current_price']:.2f} ({t['condition']} ${t['target_price']:.2f})"
+                    st.session_state.alert_notifications.append(msg)
 
     prices = st.session_state.prices
 
@@ -203,7 +237,7 @@ def main_app():
 
     dashboard = load_module("dashboard", os.path.join(BASE_DIR, "ui", "dashboard.py"))
     dashboard.main()
-    
+
     # 🔄 AUTO REFRESH
     time.sleep(2)
     st.rerun()
@@ -217,4 +251,3 @@ if not st.session_state.auth:
 else:
     st.empty()  # 🔥 CLEAR OLD UI
     main_app()
-
