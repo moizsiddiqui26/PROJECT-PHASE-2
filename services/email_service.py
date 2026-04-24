@@ -29,7 +29,50 @@ def send_email(to_email: str, subject: str, html_content: str):
     except Exception as e:
         print("Email Error:", e)
         return False
+# =========================
+# PRICE ALERT EMAIL
+# =========================
+def send_alert_email(to_email: str, coin: str, condition: str, target_price: float, current_price: float):
 
+    subject = f"🚨 Price Alert: {coin} is {condition} ${target_price}"
+
+    arrow = "📈" if condition == "above" else "📉"
+    color = "#00ffcc" if condition == "above" else "#ff4b4b"
+
+    html = f"""
+    <html>
+    <body style="font-family:Arial;background:#0f0c29;color:white;padding:20px;">
+        <h2 style="color:#4cc9f0;">🚨 Price Alert Triggered</h2>
+
+        <div style="background:#302b63;padding:15px;border-radius:10px;margin:20px 0;">
+            <p style="font-size:18px;">{arrow} <b>{coin}</b> has gone <b>{condition}</b> your target</p>
+
+            <table style="width:100%;margin-top:10px;">
+                <tr>
+                    <td style="color:gray;">Current Price</td>
+                    <td style="color:{color};font-size:22px;font-weight:bold;">${current_price:.2f}</td>
+                </tr>
+                <tr>
+                    <td style="color:gray;">Your Target</td>
+                    <td style="color:white;">${target_price:.2f}</td>
+                </tr>
+                <tr>
+                    <td style="color:gray;">Condition</td>
+                    <td style="color:white;">Price goes {condition} target</td>
+                </tr>
+            </table>
+        </div>
+
+        <p style="color:gray;font-size:12px;">
+            This alert has been deactivated. Set a new one from your dashboard.
+        </p>
+
+        <p style="margin-top:20px;">Happy Investing 💰</p>
+    </body>
+    </html>
+    """
+
+    return send_email(to_email, subject, html)
 
 # =========================
 # WELCOME EMAIL
