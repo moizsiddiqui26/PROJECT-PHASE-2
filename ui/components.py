@@ -31,7 +31,7 @@ def render_header(user):
         with col2:
             nav = st.radio(
                 "",
-                ["📊 Dashboard", "💰 Investment", "⚠ Risk", "🔮 Forecast", "👤 Portfolio", "🤖 Chatbot"],
+                ["📊 Dashboard", "💰 Investment", "⚠ Risk", "🔮 Forecast", "👤 Portfolio"],
                 horizontal=True,
                 label_visibility="collapsed"
             )
