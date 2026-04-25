@@ -4,18 +4,34 @@ import time
 st.markdown("""
 <style>
 
+/* 🔥 REMOVE STREAMLIT TOP BAR COMPLETELY */
 header {visibility: hidden;}
-#MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
+#MainMenu {visibility: hidden;}
 
-/* Remove top padding (important) */
+/* REMOVE BLACK STRIP (TOP TOOLBAR CONTAINER) */
+div[data-testid="stToolbar"] {
+    display: none !important;
+}
+
+/* REMOVE TOP SPACE COMPLETELY */
+div[data-testid="stAppViewContainer"] {
+    padding-top: 0rem !important;
+}
+
 .block-container {
     padding-top: 0rem !important;
 }
 
-/* Remove extra gap */
-div[data-testid="stAppViewContainer"] {
-    padding-top: 0rem;
+/* REMOVE ANY EXTRA WRAPPER SPACE */
+section.main > div {
+    padding-top: 0rem !important;
+}
+
+/* BACKGROUND */
+.stApp {
+    background: linear-gradient(135deg, #0f0c29, #1a1840, #24243e);
+    color: #eaeaf0;
 }
 
 </style>
