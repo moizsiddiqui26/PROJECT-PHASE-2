@@ -36,6 +36,7 @@ section.main > div {
 
 </style>
 """, unsafe_allow_html=True)
+from services.email_service import send_login_email
 # MODULE LOADER
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -151,8 +152,9 @@ def login_ui():
                 if res["success"]:
                     st.session_state.auth = True
                     st.session_state.email = email
+                    # ✅ Send login email
+                    send_login_email(email)
                     st.success("Login successful 🚀")
-
                     time.sleep(1)
                     st.rerun()
                 else:
