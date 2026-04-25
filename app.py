@@ -165,7 +165,6 @@ def login_ui():
                 res = login_user(email, password)
 
                 if res["success"]:
-                    send_welcome_email(email)
                     st.session_state.auth = True
                     st.session_state.email = email
                     st.success("Login successful 🚀")
