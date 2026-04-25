@@ -128,7 +128,7 @@ def login_ui():
 
     st.markdown("""
     <div style="text-align:center; padding:50px;">
-        <h1 style="color:#00f5ff;">🚀 Crypto SaaS</h1>
+        <h1 style="color:#00f5ff;">🚀 CRYTPTOPORT</h1>
         <p style="color:gray;">Smart Crypto Dashboard</p>
     </div>
     """, unsafe_allow_html=True)
