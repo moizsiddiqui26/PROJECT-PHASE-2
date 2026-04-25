@@ -53,8 +53,6 @@ def main():
 
     elif page == "👤 Portfolio":
         render_portfolio(df)
-    elif page == "🤖 Chatbot":
-        render_chatbot()
 
 
 # ============================================================
@@ -368,24 +366,3 @@ def render_portfolio(df):
 
 from services.chatbot import get_chatbot_response
 
-def render_chatbot():
-
-    st.markdown('<div class="section-title">🤖 AI Crypto Assistant</div>', unsafe_allow_html=True)
-
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-
-    user_input = st.chat_input("Ask about crypto, risk, forecast...")
-
-    if user_input:
-        st.session_state.chat_history.append(("user", user_input))
-
-        response = get_chatbot_response(user_input)
-        st.session_state.chat_history.append(("bot", response))
-
-    # Display chat
-    for role, msg in st.session_state.chat_history:
-        if role == "user":
-            st.chat_message("user").write(msg)
-        else:
-            st.chat_message("assistant").write(msg)
