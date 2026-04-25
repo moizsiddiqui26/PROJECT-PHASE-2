@@ -11,7 +11,6 @@ def render_header(user):
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(15,12,41,0.95);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255,255,255,0.05);
     padding: 10px 20px;
